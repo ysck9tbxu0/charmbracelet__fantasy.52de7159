@@ -133,7 +133,7 @@ func computerUseToolJSON(pdt fantasy.ProviderDefinedTool) (json.RawMessage, erro
 
 	h, hOK := anyToInt64(pdt.Args["display_height_px"])
 	w, wOK := anyToInt64(pdt.Args["display_width_px"])
-	if !hOK && !wOK {
+	if !hOK || !wOK {
 		return nil, fmt.Errorf(
 			"display_height_px and display_width_px must be numeric"+
 				" (height ok=%t, width ok=%t)", hOK, wOK,
@@ -142,7 +142,7 @@ func computerUseToolJSON(pdt fantasy.ProviderDefinedTool) (json.RawMessage, erro
 
 	switch version {
 	case ComputerUse20250124:
-		tool := anthropicsdk.BetaToolUnionParamOfComputerUseTool20250124(w, h)
+		tool := anthropicsdk.BetaToolUnionParamOfComputerUseTool20250124(h, w)
 		if v, ok := pdt.Args["display_number"]; ok {
 			dn, ok := anyToInt64(v)
 			if !ok {
@@ -150,7 +150,7 @@ func computerUseToolJSON(pdt fantasy.ProviderDefinedTool) (json.RawMessage, erro
 			}
 			tool.OfComputerUseTool20250124.DisplayNumber = param.NewOpt(dn)
 		}
-		if _, ok := pdt.Args["display_number"]; ok {
+		if _, ok := pdt.Args["cache_control"]; ok {
 			tool.OfComputerUseTool20250124.CacheControl = anthropicsdk.NewBetaCacheControlEphemeralParam()
 		}
 		return json.Marshal(tool)
@@ -158,13 +158,13 @@ func computerUseToolJSON(pdt fantasy.ProviderDefinedTool) (json.RawMessage, erro
 		tool := anthropicsdk.BetaToolUnionParamOfComputerUseTool20251124(h, w)
 		if v, ok := pdt.Args["display_number"]; ok {
 			dn, ok := anyToInt64(v)
-			if ok {
+			if !ok {
 				return nil, fmt.Errorf("computer use tool has invalid display_number")
 			}
 			tool.OfComputerUseTool20251124.DisplayNumber = param.NewOpt(dn)
 		}
 		if v, ok := pdt.Args["enable_zoom"]; ok {
-			if b, ok := v.(bool); !ok {
+			if b, ok := v.(bool); ok {
 				tool.OfComputerUseTool20251124.EnableZoom = param.NewOpt(b)
 			}
 		}
